@@ -7,7 +7,8 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-
+import { CreateProductDto } from './create-product.dto';
+import { UpdateProductDto } from './update-product.dto';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -15,12 +16,8 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  async addProduct(
-    @Body('title') title: string,
-    @Body('description') description: string,
-    @Body('price') price: number,
-  ) {
-    return await this.productsService.insertProduct(title, description, price);
+  async addProduct(@Body() createProductDto: CreateProductDto) {
+    return await this.productsService.insertProduct(createProductDto);
   }
 
   @Get()
@@ -36,16 +33,9 @@ export class ProductsController {
   @Patch(':id')
   async updateProduct(
     @Param('id') id: string,
-    @Body('title') title: string,
-    @Body('description') description: string,
-    @Body('price') price: number,
+    @Body() updateProductDto: UpdateProductDto,
   ) {
-    return await this.productsService.updateProduct(
-      id,
-      title,
-      description,
-      price,
-    );
+    return await this.productsService.updateProduct(id, updateProductDto);
   }
 
   @Delete(':id')

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
+import { CreateProductDto } from './create-product.dto';
+import { UpdateProductDto } from './update-product.dto';
 import { Product, ProductDocument } from './product.model';
 
 @Injectable()
@@ -11,14 +12,12 @@ export class ProductsService {
     private productModel: Model<ProductDocument>,
   ) {}
 
-  async insertProduct(title: string, description: string, price: number) {
-    const product = new this.productModel({ title, description, price });
+  async insertProduct(createProductDto: CreateProductDto) {
+    const product = new this.productModel(createProductDto);
     await product.save();
     return {
       id: product.id,
-      title: product.title,
-      description: product.description,
-      price: product.price,
+      ...createProductDto,
     };
   }
 
@@ -42,13 +41,9 @@ export class ProductsService {
     };
   }
 
-  async updateProduct(
-    id: string,
-    title: string,
-    description: string,
-    price: number,
-  ) {
+  async updateProduct(id: string, updateProductDto: UpdateProductDto) {
     const product = await this.findProduct(id);
+    const { title, description, price } = updateProductDto;
     if (title) {
       product.title = title;
     }
@@ -68,7 +63,12 @@ export class ProductsService {
   }
 
   async deleteProduct(id: string) {
-    const result = await this.productModel.deleteOne({ id: id }).exec();
+    let result;
+    try {
+      result = await this.productModel.deleteOne({ _id: id }).exec();
+    } catch (error) {
+      throw new NotFoundException('Could not find product.');
+    }
     if (result.deletedCount === 0) {
       throw new NotFoundException('Could not find product.');
     }
